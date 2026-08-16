@@ -160,13 +160,7 @@ function HomeTab({ tenantId, hotelProfile, roomData }) {
 
   const handleStarClick = (stars) => {
     setRating(stars);
-    // Smart Interception Logic
-    if (stars >= 4 && hotelProfile?.google_review_link) {
-      window.open(hotelProfile.google_review_link, '_blank');
-      setSubmitted(true);
-    } else {
-      setShowInternalForm(true);
-    }
+    setShowInternalForm(true);
   };
 
   const submitInternalFeedback = async () => {
@@ -205,40 +199,42 @@ function HomeTab({ tenantId, hotelProfile, roomData }) {
           <h2 className="text-2xl font-bold text-white mb-2 relative z-10">How is your stay?</h2>
           <p className="text-blue-100 text-sm mb-6 relative z-10">Your feedback helps us deliver a perfect experience.</p>
           
-          {!showInternalForm ? (
-            <div className="flex justify-center gap-3 relative z-10">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleStarClick(s)}
-                  onMouseEnter={() => setHoverRating(s)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="group transition-all duration-200 active:scale-75"
-                >
-                  <Star 
-                    className={`w-11 h-11 transition-all duration-200 drop-shadow-lg ${
-                      s <= (hoverRating || rating)
-                        ? 'fill-amber-400 text-amber-400 scale-110' 
-                        : 'fill-white/10 text-white/40 group-hover:text-white/60'
-                    }`} 
-                  />
-                </button>
-              ))}
-            </div>
-          ) : (
+          <div className="flex justify-center gap-3 relative z-10 mb-4">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                onClick={() => handleStarClick(s)}
+                onMouseEnter={() => setHoverRating(s)}
+                onMouseLeave={() => setHoverRating(0)}
+                className="group transition-all duration-200 active:scale-75"
+              >
+                <Star 
+                  className={`w-11 h-11 transition-all duration-200 drop-shadow-lg ${
+                    s <= (hoverRating || rating)
+                      ? 'fill-amber-400 text-amber-400 scale-110' 
+                      : 'fill-white/10 text-white/40 group-hover:text-white/60'
+                  }`} 
+                />
+              </button>
+            ))}
+          </div>
+
+          {showInternalForm && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="relative z-10">
-              <p className="text-white font-medium mb-3">How can we improve your stay right now?</p>
+              <p className="text-white font-medium mb-3">
+                {rating >= 4 ? "That's great! Any specific highlights?" : "How can we improve your stay right now?"}
+              </p>
               <textarea 
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
-                placeholder="Let the front desk know..."
+                placeholder={rating >= 4 ? "Let us know what you loved..." : "Let the front desk know..."}
                 className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm h-24 mb-3 resize-none"
               />
               <button 
                 onClick={submitInternalFeedback}
                 className="w-full bg-white text-blue-700 font-bold py-3 rounded-xl transition-transform active:scale-95"
               >
-                Send to Front Desk
+                {rating >= 4 ? "Send Feedback" : "Send to Front Desk"}
               </button>
             </motion.div>
           )}
@@ -248,8 +244,19 @@ function HomeTab({ tenantId, hotelProfile, roomData }) {
           <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20">
             <CheckCircle2 className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-emerald-400 mb-1">Thank You!</h2>
-          <p className="text-emerald-200/70 text-sm">We appreciate your feedback.</p>
+          <h2 className="text-xl font-bold text-emerald-400 mb-2">Thank You!</h2>
+          <p className="text-emerald-200/70 text-sm mb-4">We appreciate your feedback.</p>
+          
+          {rating >= 4 && hotelProfile?.google_review_link && (
+            <a 
+              href={hotelProfile.google_review_link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl transition-colors mt-2"
+            >
+              Support us with a Google Review
+            </a>
+          )}
         </motion.div>
       )}
 

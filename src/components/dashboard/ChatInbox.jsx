@@ -11,6 +11,7 @@ export default function ChatInbox() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const scrollRef = useRef(null);
   // Cleanup on unmount
   useEffect(() => {
     return () => {};

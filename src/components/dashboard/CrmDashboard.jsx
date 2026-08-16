@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 
 const TEMPLATE_TYPES = [
   { id: 'checkin_welcome', name: 'Welcome Email', icon: Mail, description: 'Sent automatically on check-in' },
+  { id: 'mid_stay', name: 'Mid-Stay Check-in', icon: Clock, description: 'Sent mid-way through the stay' },
   { id: 'checkout_thanks', name: 'Thank You & Review', icon: MessageSquareHeart, description: 'Sent automatically on check-out' }
 ];
 
@@ -50,10 +51,19 @@ export default function CrmDashboard() {
       setTemplate({ subject: data.subject, body: data.body });
     } else {
       // Defaults based on type
-      const defaultSubject = templateId === 'checkin_welcome' ? 'Welcome to your stay!' : 'Thank you for staying with us!';
-      const defaultBody = templateId === 'checkin_welcome' 
-        ? 'We are absolutely thrilled to host you. Please use this digital concierge to request room service, extra towels, or chat with the front desk directly.'
-        : 'We hope you had a wonderful time. We would love to hear your feedback!';
+      let defaultSubject = '';
+      let defaultBody = '';
+
+      if (templateId === 'checkin_welcome') {
+        defaultSubject = 'Welcome to your stay!';
+        defaultBody = 'We are absolutely thrilled to host you. Please use this digital concierge to request room service, extra towels, or chat with the front desk directly.';
+      } else if (templateId === 'checkout_thanks') {
+        defaultSubject = 'Thank you for staying with us!';
+        defaultBody = 'We hope you had a wonderful time. We would love to hear your feedback!';
+      } else if (templateId === 'mid_stay') {
+        defaultSubject = 'A personal check-in regarding your stay';
+        defaultBody = 'I wanted to personally reach out and see how your stay is going so far. My top priority is making sure you have a beautiful and comfortable experience with us.\n\nIf there is absolutely anything you need — whether it is extra towels, a room temperature adjustment, or just a quick question — please do not hesitate to let me know. Even if you are just "managing" through a minor inconvenience, I want to hear about it so I can fix it.\n\nI am here to help, and I want to make sure your time here is perfect.';
+      }
       
       setTemplate({ subject: defaultSubject, body: defaultBody });
       

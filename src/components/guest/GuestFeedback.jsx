@@ -234,7 +234,7 @@ function HomeTab({ tenantId, hotelProfile, roomData }) {
                 onClick={submitInternalFeedback}
                 className="w-full bg-white text-blue-700 font-bold py-3 rounded-xl transition-transform active:scale-95"
               >
-                {rating >= 4 ? "Send Feedback" : "Send to Front Desk"}
+                Send Feedback
               </button>
             </motion.div>
           )}

@@ -82,8 +82,8 @@ serve(async (req) => {
         const isMidStay = msg.message_type === 'mid_stay'
         const ctaText = isMidStay ? '💬 Send Me a Direct Message' : '✨ Share Your Experience'
         const ctaSubtext = isMidStay 
-          ? 'Tap the button above to securely message me and my team right now' 
-          : 'Tap the button above to let us know how we\\'re doing'
+          ? "Tap the button above to securely message me and my team right now" 
+          : "Tap the button above to let us know how we're doing"
 
         const googleReviewButton = (profile.google_review_link && !isMidStay) 
           ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 12px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">${gLogo} Leave Us a Review on Google</a>` 

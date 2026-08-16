@@ -83,11 +83,8 @@ serve(async (req) => {
     let actionButtons = ''
     
     if (log.template_name === 'checkout_thanks') {
-      const gLogo = `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/24px-Google_%22G%22_Logo.svg.png" width="18" height="18" style="vertical-align: middle; margin-right: 8px; border-radius: 50%; background: white; padding: 2px;" alt="G" />`
-      const bLogo = `<img src="https://cf.bstatic.com/static/img/b25logo/booking_icon_retina/63c5a6976f6259ce3ebcde11ff1bf77bb0b537be.png" width="18" height="18" style="vertical-align: middle; margin-right: 8px;" alt="B" />`
-      
-      const gReview = profile.google_review_link ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 16px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px;">${gLogo}Leave a Google Review</a>` : ''
-      const oReview = profile.ota_review_link ? `<a href="${profile.ota_review_link}" style="display: block; margin-bottom: 24px; background-color: #003b95; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px;">${bLogo}Review on Booking.com</a>` : ''
+      const gReview = profile.google_review_link ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 16px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">Leave a Google Review</a>` : ''
+      const oReview = profile.ota_review_link ? `<a href="${profile.ota_review_link}" style="display: block; margin-bottom: 24px; background-color: #003b95; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">Review on Booking.com</a>` : ''
       
       const fb = profile.facebook_url ? `<a href="${profile.facebook_url}" style="color: #2563eb; text-decoration: none; font-weight: bold; margin: 0 10px;">Facebook</a>` : ''
       const ig = profile.instagram_url ? `<a href="${profile.instagram_url}" style="color: #db2777; text-decoration: none; font-weight: bold; margin: 0 10px;">Instagram</a>` : ''

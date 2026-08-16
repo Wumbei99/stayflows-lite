@@ -77,8 +77,6 @@ serve(async (req) => {
         const feedbackLink = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.vercel.app') || 'https://your-domain.com'}/guest-feedback?t=${msg.tenant_id}&r=${msg.room_number}`
 
         // 5. Construct the email
-        const gLogo = `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/24px-Google_%22G%22_Logo.svg.png" width="18" height="18" style="vertical-align: middle; margin-right: 8px; border-radius: 50%; background: white; padding: 2px;" alt="G" />`
-        
         const isMidStay = msg.message_type === 'mid_stay'
         const ctaText = isMidStay ? '💬 Send Me a Direct Message' : '✨ Share Your Experience'
         const ctaSubtext = isMidStay 
@@ -86,7 +84,7 @@ serve(async (req) => {
           : "Tap the button above to let us know how we're doing"
 
         const googleReviewButton = (profile.google_review_link && !isMidStay) 
-          ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 12px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">${gLogo} Leave Us a Review on Google</a>` 
+          ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 12px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">Leave Us a Review on Google</a>` 
           : ''
 
         const htmlEmail = `

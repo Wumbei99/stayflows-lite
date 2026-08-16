@@ -39,7 +39,7 @@ serve(async (req) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          from: "GuestPulse Alerts <notifications@stay-flows.com>",
+          from: "StayFlows Lite Alerts <notifications@stay-flows.com>",
           to: feedbackEmail,
           subject: `🚨 URGENT: Low Rating Alert (Room ${record.room_number})`,
           html: `

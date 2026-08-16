@@ -22,12 +22,12 @@ GRANT ALL ON crm_scheduled_messages TO service_role;
 
 -- Add mid_stay template type
 INSERT INTO crm_templates (tenant_id, name, subject, body)
-SELECT t.id, 'mid_stay', 'How is your stay so far?', 
-'We hope you are enjoying your time with us! Your comfort matters to us, and we would love to hear how things are going.
+SELECT t.id, 'mid_stay', 'A personal check-in regarding your stay', 
+'I wanted to personally reach out and see how your stay is going so far. My top priority is making sure you have a beautiful and comfortable experience with us.
 
-If there is anything we can do to make your stay even better — whether it is extra pillows, room temperature, or anything at all — please do not hesitate to let us know.
+If there is absolutely anything you need — whether it is extra towels, a room temperature adjustment, or just a quick question — please do not hesitate to let me know. Even if you are just ''managing'' through a minor inconvenience, I want to hear about it so I can fix it.
 
-We would also really appreciate it if you could take a moment to share your experience. Your feedback helps us serve you better!'
+I am here to help, and I want to make sure your time here is perfect.'
 FROM tenants t
 WHERE NOT EXISTS (
   SELECT 1 FROM crm_templates ct WHERE ct.tenant_id = t.id AND ct.name = 'mid_stay'

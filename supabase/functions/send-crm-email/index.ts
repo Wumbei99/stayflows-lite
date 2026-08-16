@@ -103,11 +103,12 @@ serve(async (req) => {
       `
     } else {
       actionButtons = `
-        <a href="https://your-domain.com/guest-feedback?t=${log.tenant_id}" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 32px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-          Tap Here for Room Service & Assistance
+        <a href="${Deno.env.get('PUBLIC_SITE_URL') || 'https://stayflows-lite.vercel.app'}/guest-feedback?t=${log.tenant_id}" style="display: block; text-align: center; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 32px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+          💬 Reach Me Directly
         </a>
-        <p style="color: #64748b; font-size: 14px; margin-top: 24px; line-height: 1.5;">
-          <em>Tip: You can also scan the QR code located in your room to access these services and speak directly with management from your phone.</em>
+        <p style="color: #94a3b8; font-size: 13px; margin-top: 16px; margin-bottom: 24px; text-align: center;">Tap the button above to message me and my team anytime</p>
+        <p style="color: #64748b; font-size: 14px; line-height: 1.5; text-align: left;">
+          <em>You can also scan the QR code in your room at any time to reach me instantly from your phone.</em>
         </p>
       `
     }
@@ -148,7 +149,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: `"${hotelName}" <hello@stay-flows.com>`, 
+        from: `"The Manager at ${hotelName}" <hello@stay-flows.com>`, 
         to: log.guest_email,
         subject: template.subject,
         html: htmlEmail

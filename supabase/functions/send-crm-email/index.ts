@@ -103,7 +103,7 @@ serve(async (req) => {
       `
     } else {
       actionButtons = `
-        <a href="${Deno.env.get('PUBLIC_SITE_URL') || 'https://stayflows-lite.vercel.app'}/guest-feedback?t=${log.tenant_id}" style="display: block; text-align: center; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 32px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+        <a href="${Deno.env.get('PUBLIC_SITE_URL') || 'https://stayflows-lite.vercel.app'}/guest-feedback?t=${log.tenant_id}&r=${log.room_number || ''}" style="display: block; text-align: center; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 32px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
           💬 Reach Me Directly
         </a>
         <p style="color: #94a3b8; font-size: 13px; margin-top: 16px; margin-bottom: 24px; text-align: center;">Tap the button above to message me and my team anytime</p>

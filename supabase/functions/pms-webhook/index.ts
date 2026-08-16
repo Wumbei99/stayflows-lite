@@ -19,8 +19,8 @@ serve(async (req) => {
     )
 
     // Expected Payload from a PMS (Property Management System) like Mews or Cloudbeds
-    // { "event": "check_in" | "check_out", "tenant_id": "uuid", "room_number": "101", "guest_email": "guest@example.com", "reservation_id": "xyz123" }
-    const { event, tenant_id, room_number, guest_email, reservation_id } = await req.json()
+    // { "event": "check_in" | "check_out", "tenant_id": "uuid", "room_number": "101", "guest_email": "guest@example.com", "guest_name": "John Doe", "reservation_id": "xyz123" }
+    const { event, tenant_id, room_number, guest_email, guest_name, reservation_id } = await req.json()
 
     if (!tenant_id || !room_number) {
       throw new Error("Missing required fields: tenant_id or room_number")
@@ -31,7 +31,7 @@ serve(async (req) => {
       const newHash = crypto.randomUUID()
       await supabaseClient
         .from('rooms')
-        .update({ qr_code_hash: newHash, status: 'occupied' })
+        .update({ qr_code_hash: newHash, status: 'occupied', guest_name: guest_name || null })
         .eq('tenant_id', tenant_id)
         .eq('room_number', room_number)
 
@@ -40,7 +40,9 @@ serve(async (req) => {
         await supabaseClient.from('crm_logs').insert({
           tenant_id,
           guest_email,
-          template_name: 'Welcome Email',
+          guest_name: guest_name || null,
+          room_number,
+          template_name: 'checkin_welcome',
           status: 'pending'
         })
       }
@@ -54,7 +56,7 @@ serve(async (req) => {
       // 1. Deactivate the Room (nullify the hash so the QR code is dead)
       await supabaseClient
         .from('rooms')
-        .update({ qr_code_hash: null, status: 'vacant' })
+        .update({ qr_code_hash: null, status: 'vacant', guest_name: null })
         .eq('tenant_id', tenant_id)
         .eq('room_number', room_number)
 
@@ -70,7 +72,9 @@ serve(async (req) => {
         await supabaseClient.from('crm_logs').insert({
           tenant_id,
           guest_email,
-          template_name: 'Checkout Review',
+          guest_name: guest_name || null,
+          room_number,
+          template_name: 'checkout_thanks',
           status: 'pending'
         })
       }

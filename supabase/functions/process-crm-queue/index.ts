@@ -79,7 +79,13 @@ serve(async (req) => {
         // 5. Construct the email
         const gLogo = `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/24px-Google_%22G%22_Logo.svg.png" width="18" height="18" style="vertical-align: middle; margin-right: 8px; border-radius: 50%; background: white; padding: 2px;" alt="G" />`
         
-        const googleReviewButton = profile.google_review_link 
+        const isMidStay = msg.message_type === 'mid_stay'
+        const ctaText = isMidStay ? '💬 Send Me a Direct Message' : '✨ Share Your Experience'
+        const ctaSubtext = isMidStay 
+          ? 'Tap the button above to securely message me and my team right now' 
+          : 'Tap the button above to let us know how we\\'re doing'
+
+        const googleReviewButton = (profile.google_review_link && !isMidStay) 
           ? `<a href="${profile.google_review_link}" style="display: block; margin-bottom: 12px; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 20px; border-radius: 12px; font-size: 16px; text-align: center;">${gLogo} Leave Us a Review on Google</a>` 
           : ''
 
@@ -102,11 +108,11 @@ serve(async (req) => {
                 </p>
 
                 <!-- Primary CTA: Give Feedback -->
-                <a href="${feedbackLink}" style="display: block; margin-bottom: 16px; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 20px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-                  ✨ Share Your Experience
+                <a href="${feedbackLink}" style="display: block; margin-bottom: 16px; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; padding: 16px 20px; border-radius: 12px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); text-align: center;">
+                  ${ctaText}
                 </a>
 
-                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 24px;">Tap the button above to let us know how we're doing</p>
+                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 24px; text-align: center;">${ctaSubtext}</p>
 
                 <!-- Google Review Button -->
                 ${googleReviewButton}
@@ -133,7 +139,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${RESEND_API_KEY}`
           },
           body: JSON.stringify({
-            from: `"${hotelName}" <hello@stay-flows.com>`,
+            from: `"The Manager at ${hotelName}" <hello@stay-flows.com>`,
             to: msg.guest_email,
             subject: subject,
             html: htmlEmail

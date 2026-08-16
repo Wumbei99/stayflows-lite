@@ -11,111 +11,9 @@ export default function ChatInbox() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [alertActive, setAlertActive] = useState(false);
-  const scrollRef = useRef(null);
-  const alertIntervalRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const audioUnlockedRef = useRef(false);
-
-  // Unlock audio on first user interaction (required by browser autoplay policy)
-  useEffect(() => {
-    const unlockAudio = () => {
-      if (audioUnlockedRef.current) return;
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        // Play a silent buffer to unlock
-        const buffer = ctx.createBuffer(1, 1, 22050);
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(ctx.destination);
-        source.start(0);
-        audioCtxRef.current = ctx;
-        audioUnlockedRef.current = true;
-        console.log('[ChatInbox] Audio unlocked successfully');
-      } catch (e) {
-        console.warn('[ChatInbox] Audio unlock failed:', e);
-      }
-    };
-
-    document.addEventListener('click', unlockAudio, { once: false });
-    document.addEventListener('keydown', unlockAudio, { once: false });
-
-    return () => {
-      document.removeEventListener('click', unlockAudio);
-      document.removeEventListener('keydown', unlockAudio);
-    };
-  }, []);
-
-  // Web Audio API beep generator using pre-unlocked context
-  const playBeep = () => {
-    try {
-      // Try to use the pre-unlocked context, or create a fresh one
-      let ctx = audioCtxRef.current;
-      if (!ctx || ctx.state === 'closed') {
-        ctx = new (window.AudioContext || window.webkitAudioContext)();
-        audioCtxRef.current = ctx;
-      }
-      // Resume if suspended
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      const now = ctx.currentTime;
-
-      // First beep
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.frequency.value = 880;
-      osc1.type = 'sine';
-      gain1.gain.setValueAtTime(0.4, now);
-      gain1.gain.setValueAtTime(0, now + 0.15);
-      osc1.start(now);
-      osc1.stop(now + 0.15);
-
-      // Second beep (higher pitch)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.frequency.value = 1100;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.4, now + 0.25);
-      gain2.gain.setValueAtTime(0, now + 0.4);
-      osc2.start(now + 0.25);
-      osc2.stop(now + 0.4);
-    } catch (e) {
-      console.warn('[ChatInbox] Beep failed:', e);
-      // Fallback: try system beep via Notification API
-      try {
-        if (Notification.permission === 'granted') {
-          new Notification('New Guest Message', { body: 'A guest has sent a message', silent: false });
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission();
-        }
-      } catch (e2) {}
-    }
-  };
-
-  const startAlertSound = () => {
-    if (alertIntervalRef.current) return; // Already beeping
-    setAlertActive(true);
-    playBeep(); // Immediate first beep
-    alertIntervalRef.current = setInterval(playBeep, 2000);
-  };
-
-  const stopAlertSound = () => {
-    if (alertIntervalRef.current) {
-      clearInterval(alertIntervalRef.current);
-      alertIntervalRef.current = null;
-    }
-    setAlertActive(false);
-  };
-
   // Cleanup on unmount
   useEffect(() => {
-    return () => { if (alertIntervalRef.current) clearInterval(alertIntervalRef.current); };
+    return () => {};
   }, []);
 
   // Fetch all conversations (grouped by room_number)
@@ -133,10 +31,6 @@ export default function ChatInbox() {
       }, (payload) => {
         // Update conversation list
         fetchConversations();
-        // Start alert sound for new guest messages
-        if (payload.new.sender_type === 'guest') {
-          startAlertSound();
-        }
         // If we're viewing this room, add the message (with dedup)
         if (selectedRoom && payload.new.room_number === selectedRoom) {
           setMessages(prev => {
@@ -192,11 +86,6 @@ export default function ChatInbox() {
   const selectConversation = async (roomNumber) => {
     setSelectedRoom(roomNumber);
     
-    // Only stop the beep if there are no other unread conversations
-    const otherUnread = conversations.some(c => c.room_number !== roomNumber && c.unread > 0);
-    if (!otherUnread) {
-      stopAlertSound();
-    }
     const { data } = await supabase
       .from('guest_messages')
       .select('*')
@@ -213,6 +102,23 @@ export default function ChatInbox() {
       .eq('tenant_id', tenantId)
       .eq('room_number', roomNumber)
       .eq('sender_type', 'guest');
+
+    // Refresh conversations to update unread counts
+    await fetchConversations();
+
+    // Check if there are still other unread conversations
+    // If none remain, fire the event to stop the global alarm
+    const { data: unreadCheck } = await supabase
+      .from('guest_messages')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('sender_type', 'guest')
+      .eq('is_read', false)
+      .limit(1);
+
+    if (!unreadCheck || unreadCheck.length === 0) {
+      window.dispatchEvent(new CustomEvent('guest-message-read'));
+    }
 
     scrollToBottom();
   };
@@ -274,12 +180,6 @@ export default function ChatInbox() {
         <div className="p-4 border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
             Guest Inbox
-            {alertActive && (
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-              </span>
-            )}
           </h2>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

@@ -54,8 +54,8 @@ export default function Login() {
             <div className="flex items-center gap-4 mb-2">
               <img src="/favicon.png" alt="StayFlows Logo" className="w-12 h-12 object-contain" />
               <div className="flex flex-col">
-                <span className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">StayFlows Lite</span>
-                <span className="text-[11px] text-slate-800 font-medium tracking-wide">Intelligent Hospitality Operations</span>
+                <span className="text-2xl font-bold tracking-tight text-slate-900 leading-none">StayFlows Lite</span>
+                <span className="text-[11px] text-slate-800 font-medium tracking-wide">Intelligent Hospitality CRM and Guest Feedback</span>
               </div>
             </div>
           </div>

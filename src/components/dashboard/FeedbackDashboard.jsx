@@ -54,17 +54,10 @@ export default function FeedbackDashboard() {
     const fbChannel = supabase.channel('dashboard_feedbacks')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'in_house_feedback' }, (payload) => {
         setFeedbacks(prev => [payload.new, ...prev]);
-        // Play audio for bad rating
-        if (payload.new.rating <= 3) {
-           new Audio('/bell.mp3').play().catch(e => console.log('Audio play blocked by browser', e));
-        }
       }).subscribe();
 
     const chatChannel = supabase.channel('dashboard_chats')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'guest_messages' }, (payload) => {
-        if (payload.new.sender === 'guest') {
-          new Audio('/bell.mp3').play().catch(e => console.log('Audio play blocked by browser', e));
-        }
         setChats(prev => {
           const others = prev.filter(c => c.reservation_id !== payload.new.reservation_id);
           return [payload.new, ...others];

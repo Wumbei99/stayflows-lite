@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Mail, LogOut, Hotel, KeyRound, KanbanSquare, MessageCircle, Settings, WifiOff, Wifi, CloudOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNetwork } from '../../contexts/NetworkContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getQueueLength } from '../../lib/offlineQueue';
 
@@ -13,19 +13,22 @@ export default function DashboardLayout() {
   const [hotelName, setHotelName] = useState('StayFlows Lite');
   const [pendingActions, setPendingActions] = useState(0);
 
+  const audioCtxRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
+  const alertIntervalRef = useRef(null);
+  const [alertActive, setAlertActive] = useState(false);
+
   // Track offline queue length
   useEffect(() => {
     const checkQueue = () => {
       const len = getQueueLength();
       setPendingActions(len);
     };
-    checkQueue(); // initial check
+    checkQueue();
 
-    // Listen to custom event fired by enqueueMutation and processOfflineQueue
     const handleQueueChange = (e) => setPendingActions(e.detail.length);
     window.addEventListener('offline-queue-changed', handleQueueChange);
 
-    // Fallback poll every 5s just in case
     const interval = setInterval(checkQueue, 5000);
 
     return () => {
@@ -50,7 +53,6 @@ export default function DashboardLayout() {
     }
     fetchHotelName();
 
-    // Listen for realtime updates to hotel_settings
     const subscription = supabase.channel('hotel_settings_changes')
       .on(
         'postgres_changes',
@@ -70,6 +72,126 @@ export default function DashboardLayout() {
 
     return () => {
       supabase.removeChannel(subscription);
+    };
+  }, [tenantId]);
+
+  // Global Audio Unlock
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (audioUnlockedRef.current) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        audioCtxRef.current = ctx;
+        audioUnlockedRef.current = true;
+        console.log('[DashboardLayout] Global audio unlocked');
+      } catch (e) {
+        console.warn('[DashboardLayout] Audio unlock failed:', e);
+      }
+    };
+
+    document.addEventListener('click', unlockAudio, { once: false });
+    document.addEventListener('keydown', unlockAudio, { once: false });
+
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
+  const playBeep = () => {
+    try {
+      let ctx = audioCtxRef.current;
+      if (!ctx || ctx.state === 'closed') {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtxRef.current = ctx;
+      }
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.frequency.value = 880;
+      osc1.type = 'sine';
+      gain1.gain.setValueAtTime(0.4, now);
+      gain1.gain.setValueAtTime(0, now + 0.15);
+      osc1.start(now);
+      osc1.stop(now + 0.15);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 1100;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.4, now + 0.25);
+      gain2.gain.setValueAtTime(0, now + 0.4);
+      osc2.start(now + 0.25);
+      osc2.stop(now + 0.4);
+    } catch (e) {
+      console.warn('[DashboardLayout] Beep failed:', e);
+      try {
+        if (Notification.permission === 'granted') {
+          new Notification('New Guest Message', { body: 'A guest has sent a message', silent: false });
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission();
+        }
+      } catch (e2) {}
+    }
+  };
+
+  const startAlertSound = () => {
+    if (alertIntervalRef.current) return; // Already looping
+    setAlertActive(true);
+    playBeep(); // Immediate first beep
+    alertIntervalRef.current = setInterval(playBeep, 2000); // Loop every 2 seconds
+  };
+
+  const stopAlertSound = () => {
+    if (alertIntervalRef.current) {
+      clearInterval(alertIntervalRef.current);
+      alertIntervalRef.current = null;
+    }
+    setAlertActive(false);
+  };
+
+  // Listen for 'guest-message-read' custom event from ChatInbox to stop the alarm
+  useEffect(() => {
+    const handleRead = () => stopAlertSound();
+    window.addEventListener('guest-message-read', handleRead);
+    return () => {
+      window.removeEventListener('guest-message-read', handleRead);
+      if (alertIntervalRef.current) clearInterval(alertIntervalRef.current);
+    };
+  }, []);
+
+  // Global Realtime Subscription for Guest Messages — loops until clicked
+  useEffect(() => {
+    if (!tenantId) return;
+
+    const chatChannel = supabase.channel('global_guest_messages')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'guest_messages',
+        filter: `tenant_id=eq.${tenantId}`
+      }, (payload) => {
+        if (payload.new.sender_type === 'guest' || payload.new.sender === 'guest') {
+          startAlertSound();
+        }
+      }).subscribe();
+
+    return () => {
+      supabase.removeChannel(chatChannel);
     };
   }, [tenantId]);
 
